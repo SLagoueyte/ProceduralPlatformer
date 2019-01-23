@@ -61,19 +61,19 @@ public class LevelGenerator : MonoBehaviour {
             case StartPosition.bottomLeft:
                 return rooms[0, 0] = new Room(new Vector2(-gridSizeX, -gridSizeY), 1);
             case StartPosition.bottomRight:
-                return rooms[gridSizeX * 2, 0] = new Room(new Vector2(gridSizeX, -gridSizeY), 1);
+                return rooms[rooms.GetLength(0) - 1, 0] = new Room(new Vector2(gridSizeX - 1, -gridSizeY), 1);
             case StartPosition.center:
                 return rooms[gridSizeX, gridSizeY] = new Room(new Vector2(0, 0), 1);
             case StartPosition.left:
                 return rooms[0, gridSizeY] = new Room(new Vector2(-gridSizeX, 0), 1);
             case StartPosition.right:
-                return rooms[gridSizeX * 2, gridSizeY] = new Room(new Vector2(gridSizeX, 0), 1);
+                return rooms[rooms.GetLength(0) - 1, gridSizeY] = new Room(new Vector2(gridSizeX - 1, 0), 1);
             case StartPosition.top:
-                return rooms[gridSizeX, gridSizeY * 2] = new Room(new Vector2(0, gridSizeY), 1);
+                return rooms[gridSizeX, rooms.GetLength(1) - 1] = new Room(new Vector2(0, gridSizeY - 1), 1);
             case StartPosition.topLeft:
-                return rooms[0, gridSizeY * 2] = new Room(new Vector2(-gridSizeX, gridSizeY), 1);
+                return rooms[0, rooms.GetLength(1) - 1] = new Room(new Vector2(-gridSizeX, gridSizeY - 1), 1);
             case StartPosition.topRight:
-                return rooms[gridSizeX * 2, gridSizeY * 2] = new Room(new Vector2(-gridSizeX, gridSizeY), 1);
+                return rooms[rooms.GetLength(0) - 1, rooms.GetLength(1) - 1] = new Room(new Vector2(gridSizeX - 1, gridSizeY - 1), 1);
         }   
     }
 
@@ -84,6 +84,7 @@ public class LevelGenerator : MonoBehaviour {
         Room startRoom = SetStartRoom();
         startRoom.isMainRoom = true;
         startRoom.isAccesibleFromMainRoom = true;
+        Debug.Log(startRoom.gridPos);
 
         takenPositions.Insert(0, startRoom.gridPos);
         Vector2 checkPos = startRoom.gridPos;
@@ -236,7 +237,7 @@ public class LevelGenerator : MonoBehaviour {
         //Ends Room cycle
 
         StartCoroutine(CheckConnectedToMainRoom());
-        StopCoroutine(RandomizeRoomDoors());
+        yield break;
     }
 
     IEnumerator CheckConnectedToMainRoom() {
@@ -331,8 +332,20 @@ public class LevelGenerator : MonoBehaviour {
             }
         }
 
+        foreach (Room room in rooms) {
+            if (room == null) {
+                continue;
+            }
+            if (!room.isAccesibleFromMainRoom) {
+                StartCoroutine(CheckConnectedToMainRoom());
+                Debug.LogWarning("Warning: Repeating main room door putting process");
+                yield break;
+            }
+        }
+
         DrawMap();
-        StopCoroutine(CheckConnectedToMainRoom());
+        GetComponent<SheetAssigner>().Assign(rooms);
+        yield break;
     }
 
     void DrawMap() {
