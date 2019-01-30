@@ -6,4 +6,5 @@ using UnityEngine;
 public class ColorToGameObject  {
     public Color color;
     public GameObject prefab;
+    public string type;
 }

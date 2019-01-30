@@ -12,6 +12,8 @@ public class Room {
     [SerializeField]
     public Room connectedDownRoom, connectedUpRoom, connectedRightRoom, connectedLeftRoom;
 
+    public RoomInstance myInstance;
+
     public Room(Vector2 _gridPos, int _type) {
         gridPos = _gridPos;
         type = _type;

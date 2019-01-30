@@ -6,30 +6,76 @@ public class SheetAssigner : MonoBehaviour {
 
     [SerializeField]
     Texture2D[] sheetsNormal;
+    [SerializeField]
+    Texture2D[] sheetsStart;
 
     [SerializeField]
     GameObject roomObj;
 
-    public Vector2 roomDimensions = new Vector2(16 * 17, 16 * 9);
+    Vector2 roomDimensions;
 
-    public Vector2 gutterSize = new Vector2(16 * 9, 16 * 4);
+    [SerializeField]
+    Vector2 gutterSize = new Vector2(9, 4); //How large it's the gap between rooms
+
+    public Vector2 GutterSize {
+        get {
+            return gutterSize;
+        }
+    }
+
+    public Vector2 RoomDimensions {
+        get {
+            return roomDimensions;
+        }
+    }
 
     public void Assign(Room[,] rooms) {
+        Texture2D[] selectedSheet;
+        List<RoomInstance> roomInstances = new List<RoomInstance>();
+
         foreach (Room room in rooms) {
             if (room == null) {
                 continue;
             }
 
-            int index = Mathf.RoundToInt(Random.value * (sheetsNormal.Length - 1));
-            Vector3 pos = new Vector3(room.gridPos.x * (roomDimensions.x + gutterSize.x), room.gridPos.y * (roomDimensions.y + gutterSize.y), 0);
-            RoomInstance myRoom = Instantiate(roomObj, pos, Quaternion.identity).GetComponent<RoomInstance>();
-            myRoom.Setup(sheetsNormal[index],
+            int index;
+
+            if (room.type == 0) {
+                index = Mathf.RoundToInt(Random.value * (sheetsNormal.Length - 1));
+                selectedSheet = sheetsNormal;
+            } else {
+                index = Mathf.RoundToInt(Random.value * (sheetsStart.Length - 1));
+                selectedSheet = sheetsStart;
+            }
+
+            RoomInstance myRoom = Instantiate(roomObj, Vector3.zero, Quaternion.identity).GetComponent<RoomInstance>();
+            myRoom.gameObject.name = "Room at " + room.gridPos;
+            myRoom.Setup(selectedSheet[index],
                 room.gridPos,
                 room.type,
-                room.connectedUpRoom != null ? true : false,
-                room.connectedDownRoom != null ? true : false,
-                room.connectedLeftRoom != null ? true : false,
-                room.connectedRightRoom != null ? true : false);
+                room,
+
+                room.connectedUpRoom,
+                room.connectedDownRoom,
+                room.connectedLeftRoom,
+                room.connectedRightRoom);
+
+            if (myRoom.RoomSizeInTiles.x > myRoom.RoomSizeInTiles.y) {
+                roomDimensions = new Vector2(myRoom.TileSize * myRoom.RoomSizeInTiles.x, myRoom.TileSize * myRoom.RoomSizeInTiles.x);
+            } else {
+                roomDimensions = new Vector2(myRoom.TileSize * myRoom.RoomSizeInTiles.y, myRoom.TileSize * myRoom.RoomSizeInTiles.y);
+            }
+
+            Vector2 offset = (gutterSize * myRoom.TileSize);
+
+            Vector3 pos = new Vector3(room.gridPos.x * (roomDimensions.x + offset.x), room.gridPos.y * (roomDimensions.y + offset.y), 0);
+
+            myRoom.gameObject.transform.position = pos;
+            roomInstances.Add(myRoom);
+        }
+
+        foreach (RoomInstance roomInstance in roomInstances) {
+            roomInstance.ConnectDoors();
         }
 
     }

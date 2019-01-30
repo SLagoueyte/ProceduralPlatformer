@@ -52,13 +52,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acd37b87e5208524581ab1cfdc19716e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mySpr: {fileID: 212138758943007990}
   tex: {fileID: 0}
+  backgrounds:
+  - {fileID: 21300000, guid: 0a6047c633a36c149837d9c8fe5d51e9, type: 3}
+  - {fileID: 21300000, guid: 57c70bad3385bfd4cbfb687487a51426, type: 3}
   gridPos: {x: 0, y: 0}
   type: 0
-  doorTop: 0
-  doorBot: 0
-  doorLeft: 0
-  doorRight: 0
+  connectedDownRoom:
+    gridPos: {x: 0, y: 0}
+    type: 0
+    isMainRoom: 0
+    isAccesibleFromMainRoom: 0
+    myInstance: {fileID: 0}
+  connectedUpRoom:
+    gridPos: {x: 0, y: 0}
+    type: 0
+    isMainRoom: 0
+    isAccesibleFromMainRoom: 0
+    myInstance: {fileID: 0}
+  connectedRightRoom:
+    gridPos: {x: 0, y: 0}
+    type: 0
+    isMainRoom: 0
+    isAccesibleFromMainRoom: 0
+    myInstance: {fileID: 0}
+  connectedLeftRoom:
+    gridPos: {x: 0, y: 0}
+    type: 0
+    isMainRoom: 0
+    isAccesibleFromMainRoom: 0
+    myInstance: {fileID: 0}
   doorU: {fileID: 1710379437576902, guid: 077fe673c1992ba4ebc1b08977eedf99, type: 2}
   doorD: {fileID: 1710379437576902, guid: 077fe673c1992ba4ebc1b08977eedf99, type: 2}
   doorL: {fileID: 1710379437576902, guid: 077fe673c1992ba4ebc1b08977eedf99, type: 2}
@@ -67,8 +91,15 @@ MonoBehaviour:
   mappings:
   - color: {r: 0, g: 0, b: 0, a: 1}
     prefab: {fileID: 1891086266265100, guid: 418ad6618e6cf2747bedd7aa5a4f3135, type: 2}
+    type: wall
   - color: {r: 0, g: 0, b: 1, a: 1}
     prefab: {fileID: 1683572750968088, guid: 0d07fe38c536f5f4f824da675f3d36eb, type: 2}
+    type: obst
+  - color: {r: 1, g: 0, b: 0, a: 1}
+    prefab: {fileID: 1063382003118686, guid: 23a7726a3ab432744a61872e3900c289, type: 2}
+    type: start
+  doorTriggers: []
+  commonTileSize: 16
 --- !u!212 &212138758943007990
 SpriteRenderer:
   m_ObjectHideFlags: 1

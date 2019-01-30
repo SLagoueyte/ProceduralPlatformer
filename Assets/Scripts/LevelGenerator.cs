@@ -28,6 +28,10 @@ public class LevelGenerator : MonoBehaviour {
 
     public GameObject roomWhiteObj;
 
+
+    public delegate void FinishedCreatingMap();
+    public static event FinishedCreatingMap OnFinished;
+
     private void Start() {
         if (numberOfRooms > ((worldSize.x * 2) * (worldSize.y * 2)) * 0.5f) {
             numberOfRooms = Mathf.RoundToInt(((worldSize.x * 2) * (worldSize.y * 2)) * 0.5f);
@@ -345,6 +349,7 @@ public class LevelGenerator : MonoBehaviour {
 
         DrawMap();
         GetComponent<SheetAssigner>().Assign(rooms);
+        OnFinished(); //Temporal. Cambiar a GameController luego.
         yield break;
     }
 
