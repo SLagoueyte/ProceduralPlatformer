@@ -81,6 +81,9 @@ public class LevelGenerator : MonoBehaviour {
         }   
     }
 
+    /// <summary>
+    /// Creates a first-main room and starts creating rooms from there.
+    /// </summary>
     void CreateRooms() {
         //Setup
         rooms = new Room[gridSizeX * 2, gridSizeY * 2];
@@ -111,7 +114,7 @@ public class LevelGenerator : MonoBehaviour {
                     iterations++;
                 } while (NumberOfNeighbours(checkPos, takenPositions) > 1 && iterations <= 100);
                 if (iterations >= 50) {
-                    Debug.LogError("Error: Could not create with fewer neighbours than: " + NumberOfNeighbours(checkPos, takenPositions));
+                    Debug.LogError("Error: " + checkPos + " Could not be created with fewer neighbours than: " + NumberOfNeighbours(checkPos, takenPositions));
                 }
             }
 
@@ -121,6 +124,9 @@ public class LevelGenerator : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// If a room has a neighbour, makes a door across them.
+    /// </summary>
     void SetRoomDoors() {
         for (int x = 0; x < (gridSizeX * 2); x++) {
             for (int y = 0; y < (gridSizeY * 2); y++) {
@@ -154,6 +160,10 @@ public class LevelGenerator : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Randomly deletes doors
+    /// </summary>
+    /// <returns></returns>
     IEnumerator RandomizeRoomDoors() {
         for (int x = 0; x < (gridSizeX * 2); x++) {
             yield return new WaitForEndOfFrame();
@@ -244,6 +254,10 @@ public class LevelGenerator : MonoBehaviour {
         yield break;
     }
 
+    /// <summary>
+    /// Does several cycles to check if every room is connected to the main room on any level.
+    /// </summary>
+    /// <returns></returns>
     IEnumerator CheckConnectedToMainRoom() {
         bool isAccesibleYet;
 

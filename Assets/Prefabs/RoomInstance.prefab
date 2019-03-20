@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 212138758943007990}
   - component: {fileID: 114894096247121810}
   m_Layer: 0
-  m_Name: RoomRoot
+  m_Name: RoomInstance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,6 +57,7 @@ MonoBehaviour:
   backgrounds:
   - {fileID: 21300000, guid: 0a6047c633a36c149837d9c8fe5d51e9, type: 3}
   - {fileID: 21300000, guid: 57c70bad3385bfd4cbfb687487a51426, type: 3}
+  - {fileID: 21300000, guid: 09fcbe14599d3ab4f803fb8419835942, type: 3}
   gridPos: {x: 0, y: 0}
   type: 0
   connectedDownRoom:
@@ -98,8 +99,10 @@ MonoBehaviour:
   - color: {r: 1, g: 0, b: 0, a: 1}
     prefab: {fileID: 1063382003118686, guid: 23a7726a3ab432744a61872e3900c289, type: 2}
     type: start
+  - color: {r: 0, g: 1, b: 0, a: 1}
+    prefab: {fileID: 1424441985414180, guid: 73b0703ec59ed2a4cb5251c21c85e007, type: 2}
+    type: door
   doorTriggers: []
-  commonTileSize: 16
 --- !u!212 &212138758943007990
 SpriteRenderer:
   m_ObjectHideFlags: 1

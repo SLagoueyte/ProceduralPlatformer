@@ -30,11 +30,11 @@ public class RoomInstance : MonoBehaviour {
     public List<DoorTrigger> doorTriggers = new List<DoorTrigger>();
 
     [SerializeField]
-    int commonTileSize = 16;
+    static int commonTileSize = 16;
 
     float tileSize; //Has to be some factor from the roomSizeInTiles numbers
 
-    Vector2 roomSizeInTiles; //The size of the small texture
+    Vector2 roomSizeInTiles; //The size of the read/write texture
 
     Tile[,] tiles;
     List<List<Tile>> tileClustersList = new List<List<Tile>>();
@@ -85,7 +85,7 @@ public class RoomInstance : MonoBehaviour {
         foreach (Sprite background in backgrounds) {
             tileWidth = background.texture.width / roomSizeInTiles.x;
             tileHeight = background.texture.height / roomSizeInTiles.y;
-            if (tileWidth == tileHeight) {
+            if (tileWidth == tileHeight) { //If the background has a tile that's the same width and height as the one we need, we pick that one as our background.
                 tileSize = tileWidth;
                 mySpr.sprite = background;
                 break;
@@ -101,8 +101,15 @@ public class RoomInstance : MonoBehaviour {
 
         tiles = new Tile[tex.width, tex.height];
 
+
         MakeDoors();
         GenerateRoomTiles();
+    }
+
+    public static int CommonTileSize {
+        get {
+            return commonTileSize;
+        }
     }
 
     public float TileSize {
@@ -165,23 +172,79 @@ public class RoomInstance : MonoBehaviour {
                         tiles[x, y] = new Tile(spawnPos, x, y, Tile.Type.obst);
                         break;
 
+                    case "door":
+                        Vector2Int nearestDoorTrigger = AreDoorsNear(x, y);
+                        if (nearestDoorTrigger != new Vector2Int(tiles.GetLength(0) + 1, tiles.GetLength(1) + 1)) {
+                            DoorTrigger doorTriggerObject = tiles[nearestDoorTrigger.x, nearestDoorTrigger.y].myGameObject.GetComponent<DoorTrigger>();
+
+                            tiles[x, y] = new Tile(spawnPos, x, y, Tile.Type.door);
+                            doorTriggerObject.SetExtraExitSpace(1, 
+                                (nearestDoorTrigger.y > y) ? 1 : (nearestDoorTrigger.y < y) ? -1 : 0, 
+                                (nearestDoorTrigger.x > x) ? 1 : (nearestDoorTrigger.x < x) ? -1 : 0);
+                                
+                        } else {
+                            tiles[x, y] = new Tile(spawnPos, x, y, Tile.Type.wall);
+                        }
+                        break;
+
                     default:
                         tiles[x, y] = new Tile(spawnPos, x, y);
                         break;
                 }
 
-                tiles[x,y].myGameObject = Instantiate(mapping.prefab, spawnPos, Quaternion.identity);
+                tiles[x, y].myGameObject = Instantiate(mapping.prefab, spawnPos, Quaternion.identity);
                 tiles[x, y].myGameObject.transform.parent = this.transform;
+
+                if (mapping.type == "door") {
+                    if (tiles[x,y].myType == Tile.Type.wall) {
+                        tiles[x, y].myGameObject.GetComponent<TileHolderChanger>().ChangeMyObject(1);
+                    }
+                }
+
+                return;
             } else {
-                //print(mapping.color + " , " + pixelColor);
+                //print(" MAP: " + mapping.color);
             }
-        }
+        } 
+
+        //print(pixelColor);
     }
 
+    Vector2Int AreDoorsNear(int x, int y) {
+        if (x + 1 < tiles.GetLength(0)) {
+            if (tiles[x + 1, y] != null && tiles[x + 1, y].myType == Tile.Type.door && tiles[x + 1, y].myGameObject != null) {
+                return new Vector2Int(x + 1, y);
+            }
+        }
+
+        if (x - 1 >= 0) {
+            if (tiles[x - 1, y] != null && tiles[x - 1, y].myType == Tile.Type.door && tiles[x - 1, y].myGameObject != null) {
+                return new Vector2Int(x - 1, y);
+            }
+        }
+
+        if (y + 1 < tiles.GetLength(1)) {
+            if (tiles[x, y + 1] != null && tiles[x, y + 1].myType == Tile.Type.door && tiles[x, y + 1].myGameObject != null) {
+                return new Vector2Int(x, y + 1);
+            }
+        }
+
+        if (y - 1 >= 0) {
+            if (tiles[x, y - 1] != null && tiles[x, y - 1].myType == Tile.Type.door && tiles[x, y - 1].myGameObject != null) {
+                return new Vector2Int(x, y - 1);
+            }
+        }
+
+        return new Vector2Int(tiles.GetLength(0) + 1, tiles.GetLength(1) + 1);
+    }
+
+    /// <summary>
+    /// Checks for tiles that are next to each other
+    /// </summary>
     void CalculateTileClusters() {
         for (int x = 0; x < tiles.GetLength(0); x++) {
             for (int y = 0; y < tiles.GetLength(1); y++) {
-                if (tiles[x,y] == null || (tiles[x, y].myType == Tile.Type.none)) {
+                if (tiles[x,y] == null || (tiles[x, y].myType == Tile.Type.none) || (tiles[x, y].myType == Tile.Type.door)) {
                     continue;
                 }
 
@@ -203,6 +266,15 @@ public class RoomInstance : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Checks for any tile that is either vertica or horizontal to the original tiles, 
+    /// and continues on that path until it finds a repeat and no other unchecked adyacent tile.
+    /// </summary>
+    /// <param name="tile"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="parent"></param>
+    /// <param name="reCheck"></param>
     void FollowTile(Tile tile, int x, int y, GameObject parent, bool reCheck) {
         Tile checkingTile = tile;
         int checkPosX = x;
@@ -219,7 +291,7 @@ public class RoomInstance : MonoBehaviour {
                     continue;
                 }
               
-                if (tiles[checkPosX + h, checkPosY + v] != null) {
+                if (tiles[checkPosX + h, checkPosY + v] != null && tiles[checkPosX + h, checkPosY + v].myType != Tile.Type.door) {
                     if (!tiles[checkPosX + h, checkPosY + v].alreadychecked) {
                         if (tiles[checkPosX + h, checkPosY + v].myType == checkingTile.myType) {
                             foundTile = true;
@@ -262,10 +334,16 @@ public class RoomInstance : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Calculates the four vertices of each tile and adds them to a dictionary.
+    /// </summary>
     void CalculateNodes() {
         Dictionary<Vector2, List<Tile>> nodesdictionary;
         List<Vector2> positions;
 
+        //if (myRoom.DoorCount == 1) {
+        //    Debug.LogError("NEW ROOM | " + gridPos);
+        //}
         foreach (List<Tile> tileCluster in tileClustersList) {
             nodesdictionary = new Dictionary<Vector2, List<Tile>>();
             positions = new List<Vector2>();
@@ -291,6 +369,13 @@ public class RoomInstance : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Checks for nodes that are connected to each other, in order to put a collider between them. 
+    /// Tries to only search for edges.
+    /// </summary>
+    /// <param name="dictionary"></param>
+    /// <param name="positions"></param>
+    /// <param name="gObject"></param>
     void ConnectNodes(Dictionary<Vector2, List<Tile>> dictionary, List<Vector2> positions, GameObject gObject) {
         List<Vector2> edges = new List<Vector2>();
         HashSet<Vector2> checkedVectors = new HashSet<Vector2>();
@@ -298,6 +383,12 @@ public class RoomInstance : MonoBehaviour {
         Vector2 lastChange = -Vector2.one;
 
         EdgeCollider2D edgeCollider = gObject.AddComponent<EdgeCollider2D>();
+        edgeCollider.tag = doorWall.tag;
+        gObject.layer = doorWall.layer;
+
+        //if (myRoom.DoorCount == 1) {
+        //    Debug.LogWarning("New cluster");
+        //}
 
         foreach (Vector2 position in positions) {
             if (dictionary[position].Count == 0 || dictionary[position].Count >= 4) {
@@ -326,9 +417,17 @@ public class RoomInstance : MonoBehaviour {
                         }
 
                         if (dictionary.ContainsKey(checkedPosition + direction) && foundPartner == false) {
-                            foundPartner = CheckTileNodes(dictionary[checkedPosition], dictionary[checkedPosition + direction]);
+                            if (myRoom.DoorCount == 1) {
+                                //Debug.Log("Checked Position: " + checkedPosition + ", Other: " + checkedPosition + direction);
+                            }
+                            foundPartner = SameSquareSharing(dictionary[checkedPosition], dictionary[checkedPosition + direction]);
+
+                            
                             if (foundPartner) {
                                 edges.Add(checkedPosition);
+                                if (myRoom.DoorCount == 1) {
+                                    //Debug.LogWarning(edges[edges.Count - 1]);
+                                }
                                 checkedVectors.Add(checkedPosition);
                                 break;
                             }
@@ -352,6 +451,11 @@ public class RoomInstance : MonoBehaviour {
         edgeCollider.points = PolishEdges(edges.ToArray());
     }
 
+    /// <summary>
+    /// Checks for sudden changes in the direction of the edges, so the collider that will be created has less points.
+    /// </summary>
+    /// <param name="edges"></param>
+    /// <returns></returns>
     Vector2[] PolishEdges(Vector2[] edges) {
 
         List<Vector2> corners = new List<Vector2>();
@@ -361,6 +465,7 @@ public class RoomInstance : MonoBehaviour {
         bool staticX = false, changeX = false;
 
         for (int i = 0; i < edges.Length; i++) {
+
             if (i == 0) {
                 initialX = edges[i].x;
                 initialY = edges[i].y;
@@ -394,10 +499,41 @@ public class RoomInstance : MonoBehaviour {
             lastY = edges[i].y;
         }
 
+        if (lastX == edges[1].x) {
+            staticX = true;
+        }
+        if (lastY == edges[1].y) {
+            staticX = false;
+        }
+
+        if (staticX == changeX) {
+            //Debug.Log("H: " + lastX);
+            //Debug.Log("V: " + lastY);
+            changeX = !staticX;
+            corners.Add(edges[0]);
+        }
+
+        corners.Add(corners[0]);
+
+        //if (myRoom.DoorCount == 1) {
+        //    Debug.LogWarning("New cornes");
+        //}
+        //if (myRoom.DoorCount == 1) {
+        //    foreach (Vector2 corner in corners) {
+        //        Debug.Log(corner);
+        //    }
+        //}
+
         return corners.ToArray();
     }
 
-    bool CheckTileNodes(List<Tile> tiles, List<Tile> otherTiles) {
+    /// <summary>
+    /// Returns true if less than 2 squares share the same node
+    /// </summary>
+    /// <param name="tiles"></param>
+    /// <param name="otherTiles"></param>
+    /// <returns></returns>
+    bool SameSquareSharing(List<Tile> tiles, List<Tile> otherTiles) {
         int sharedSquares = 0;
         foreach (Tile tile in tiles) {
             foreach (Tile otherTile in otherTiles) {
@@ -406,9 +542,20 @@ public class RoomInstance : MonoBehaviour {
                 }
             }
         }
-        return sharedSquares < 2;
+        //if (myRoom.DoorCount == 1) {
+        //    if (sharedSquares < 1) {
+        //        Debug.Log(sharedSquares);
+        //    }
+        //}
+        return sharedSquares == 1;
     }
 
+    /// <summary>
+    /// Gets the world position equivalent to the grid position of each tile.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
     Vector3 PositionFromTileGrid(int x, int y) {
         Vector3 ret;
         //Vector3 offset = new Vector3((-roomSizeInTiles.x + 1) * tileSize,
@@ -420,11 +567,41 @@ public class RoomInstance : MonoBehaviour {
         return ret;
     }
 
+    /// <summary>
+    /// Places door objects if there are rooms connected to this one.
+    /// </summary>
+    /// <param name="spawnPos"></param>
+    /// <param name="doorExit"></param>
+    /// <param name="doorSpawn"></param>
+    /// <param name="spawnRot"></param>
     void PlaceDoor(Vector3 spawnPos, Room doorExit, GameObject doorSpawn, Quaternion spawnRot) {
         if (doorExit != null) {
             GameObject door = Instantiate(doorSpawn, spawnPos, spawnRot) as GameObject;
             door.transform.parent = transform;
             doorTriggers.Insert(0, door.GetComponent<DoorTrigger>());
+
+            int xTile = 0, yTile = 0;
+
+            if (spawnPos.y > 0) {
+                xTile = tiles.GetLength(0) / 2;
+                yTile = tiles.GetLength(1) - 1;
+                tiles[tiles.GetLength(0) / 2, tiles.GetLength(1) - 1] = new Tile(spawnPos, tiles.GetLength(0) / 2, tiles.GetLength(1) - 1, Tile.Type.door);
+            } else if (spawnPos.y < 0) {
+                xTile = tiles.GetLength(0) / 2;
+                yTile = 0;
+                tiles[tiles.GetLength(0) / 2, 0] = new Tile(spawnPos, tiles.GetLength(0) / 2, 0, Tile.Type.door);
+            } else if (spawnPos.x < 0) {
+                xTile = 0;
+                yTile = tiles.GetLength(1) / 2;
+                tiles[0, tiles.GetLength(1) / 2] = new Tile(spawnPos, 0, tiles.GetLength(1) / 2, Tile.Type.door);
+            } else if (spawnPos.x > 0) {
+                xTile = tiles.GetLength(0) - 1;
+                yTile = tiles.GetLength(1) / 2;
+                tiles[tiles.GetLength(0) - 1, tiles.GetLength(1) / 2] = new Tile(spawnPos, tiles.GetLength(0) - 1, tiles.GetLength(1) / 2, Tile.Type.door);
+            }
+            tiles[xTile, yTile] = new Tile(spawnPos, xTile, yTile, Tile.Type.door);
+            tiles[xTile, yTile].myGameObject = door;
+
 
             doorTriggers[0].SetConnectedRoom(doorExit);
             if (doorExit == connectedDownRoom) {
@@ -468,6 +645,7 @@ public class RoomInstance : MonoBehaviour {
     public void ConnectDoors() {
         foreach (DoorTrigger doorTrigger in doorTriggers) {
             doorTrigger.SetExit();
+            doorTrigger.StrechToExtraSpace();
         }
     }
 }

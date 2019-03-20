@@ -20,9 +20,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4302923867328082}
   - component: {fileID: 212586547111735802}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: WallTile
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Start Point
+  - Obstacle
   layers:
   - Default
   - TransparentFX
@@ -15,8 +16,8 @@ TagManager:
   - 
   - 
   - Map
-  - 
-  - 
+  - Player
+  - Obstacle
   - 
   - 
   - 

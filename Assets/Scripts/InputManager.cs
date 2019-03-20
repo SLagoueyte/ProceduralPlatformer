@@ -7,10 +7,12 @@ public class InputManager : MonoBehaviour {
     [SerializeField]
     PlayerController player;
 
-    void Update() {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+    void FixedUpdate() {
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
 
         player.Move(h, v);
+      
+        player.Jump(Input.GetButton("Jump"));
     }
 }
