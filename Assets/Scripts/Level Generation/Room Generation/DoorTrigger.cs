@@ -78,7 +78,9 @@ public class DoorTrigger : MonoBehaviour {
         }
 
         if (collision.CompareTag("Player")) {
+
             collision.transform.position = connectedExitPoint.position;
+            GameController.instance.GetPlayerController.ChangePlayerRoom(connectedExit);
         }
     }
 

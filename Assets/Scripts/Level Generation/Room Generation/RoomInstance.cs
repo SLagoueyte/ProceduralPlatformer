@@ -43,7 +43,8 @@ public class RoomInstance : MonoBehaviour {
 
     class Tile {
         public enum Type {
-            wall, door, obst, none
+            wall, door, obst, none,
+            enemySpawn
         }
 
         public Type myType = Type.none;
@@ -187,6 +188,10 @@ public class RoomInstance : MonoBehaviour {
                         }
                         break;
 
+                    case "enemySpawn":
+                        tiles[x, y] = new Tile(spawnPos, x, y, Tile.Type.enemySpawn);
+                        break;
+
                     default:
                         tiles[x, y] = new Tile(spawnPos, x, y);
                         break;
@@ -203,7 +208,7 @@ public class RoomInstance : MonoBehaviour {
 
                 return;
             } else {
-                //print(" MAP: " + mapping.color);
+                //print(" MAP: " + mapping.color + " || " + pixelColor); //For other colors to work, do them in  0 to 255
             }
         } 
 
@@ -244,7 +249,7 @@ public class RoomInstance : MonoBehaviour {
     void CalculateTileClusters() {
         for (int x = 0; x < tiles.GetLength(0); x++) {
             for (int y = 0; y < tiles.GetLength(1); y++) {
-                if (tiles[x,y] == null || (tiles[x, y].myType == Tile.Type.none) || (tiles[x, y].myType == Tile.Type.door)) {
+                if (tiles[x,y] == null || ((tiles[x, y].myType != Tile.Type.wall) && (tiles[x, y].myType != Tile.Type.obst))) {
                     continue;
                 }
 
@@ -290,8 +295,11 @@ public class RoomInstance : MonoBehaviour {
                     (h == 0 && v == 0)) {
                     continue;
                 }
+                if ((h == -1 && v == -1) || (h == 1 && v == -1) || (h == 1 && v == 1) || (h == -1 && v == -1)) {
+                    continue;
+                }
               
-                if (tiles[checkPosX + h, checkPosY + v] != null && tiles[checkPosX + h, checkPosY + v].myType != Tile.Type.door) {
+                if (tiles[checkPosX + h, checkPosY + v] != null && (tiles[checkPosX + h, checkPosY + v].myType == Tile.Type.obst || tiles[checkPosX + h, checkPosY + v].myType == Tile.Type.wall)) {
                     if (!tiles[checkPosX + h, checkPosY + v].alreadychecked) {
                         if (tiles[checkPosX + h, checkPosY + v].myType == checkingTile.myType) {
                             foundTile = true;

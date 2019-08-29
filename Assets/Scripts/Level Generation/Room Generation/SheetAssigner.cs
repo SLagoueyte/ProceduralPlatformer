@@ -55,6 +55,7 @@ public class SheetAssigner : MonoBehaviour {
             roomInstances.Add(myRoom);
         }
 
+        GameController.instance.SetRoomInstances(roomInstances.ToArray());
         RePositionRoomInstances(roomInstances);
     }
 

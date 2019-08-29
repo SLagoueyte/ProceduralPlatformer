@@ -102,6 +102,9 @@ MonoBehaviour:
   - color: {r: 0, g: 1, b: 0, a: 1}
     prefab: {fileID: 1424441985414180, guid: 73b0703ec59ed2a4cb5251c21c85e007, type: 2}
     type: door
+  - color: {r: 0.5019608, g: 0, b: 0, a: 1}
+    prefab: {fileID: 1115231565184050, guid: 8d74e9b1c5a32234cb02e2b8bcbcbd21, type: 2}
+    type: enemySpawn
   doorTriggers: []
 --- !u!212 &212138758943007990
 SpriteRenderer:

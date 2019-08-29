@@ -363,7 +363,9 @@ public class LevelGenerator : MonoBehaviour {
 
         DrawMap();
         GetComponent<SheetAssigner>().Assign(rooms);
-        OnFinished(); //Temporal. Cambiar a GameController luego.
+
+
+        GameController.instance.LevelFinishedLoad(rooms);
         yield break;
     }
 

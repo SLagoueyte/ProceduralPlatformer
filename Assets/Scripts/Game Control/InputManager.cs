@@ -14,5 +14,7 @@ public class InputManager : MonoBehaviour {
         player.Move(h, v);
       
         player.Jump(Input.GetButton("Jump"));
+
+        player.Attack(Input.GetButton("Fire1"));
     }
 }
